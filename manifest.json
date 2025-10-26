@@ -1,0 +1,65 @@
+{
+  "id": "/",
+  "name": "Organizador Financeiro",
+  "short_name": "OrgFinanceiro",
+  "description": "Controle entradas, gastos, investimentos e acompanhe a saúde financeira em tempo real.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#4ade80",
+  "categories": ["finance", "productivity"],
+  "prefer_related_applications": false,
+
+  "shortcuts": [
+    {
+      "name": "Adicionar gasto",
+      "url": "/#modal-add-gasto",
+      "description": "Abrir o formulário para um novo gasto",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Investimentos",
+      "url": "/#painel-investimentos",
+      "description": "Ir direto para a área de investimentos",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
