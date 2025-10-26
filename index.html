@@ -472,6 +472,108 @@
     display: none !important;
   }
 
+  .import-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    background: rgba(248, 250, 252, 0.85);
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+
+  .import-filter-btn:hover {
+    background: rgba(226, 232, 240, 0.85);
+  }
+
+  .import-filter-btn[aria-selected="true"] {
+    border-color: #f59e0b;
+    background: #fef3c7;
+    color: #92400e;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.25);
+  }
+
+  .dark .import-filter-btn {
+    border-color: rgba(71, 85, 105, 0.65);
+    background: rgba(15, 23, 42, 0.7);
+    color: #cbd5f5;
+  }
+
+  .dark .import-filter-btn:hover {
+    background: rgba(30, 41, 59, 0.75);
+  }
+
+  .dark .import-filter-btn[aria-selected="true"] {
+    border-color: rgba(251, 191, 36, 0.55);
+    background: rgba(251, 191, 36, 0.16);
+    color: #fcd34d;
+    box-shadow: 0 6px 18px rgba(251, 191, 36, 0.2);
+  }
+
+  .import-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .import-status-new {
+    background: rgba(16, 185, 129, 0.18);
+    color: #047857;
+  }
+
+  .import-status-duplicate {
+    background: rgba(245, 158, 11, 0.18);
+    color: #92400e;
+  }
+
+  .import-status-conflict {
+    background: rgba(248, 113, 113, 0.2);
+    color: #b91c1c;
+  }
+
+  .dark .import-status-new {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+  }
+
+  .dark .import-status-duplicate {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+  }
+
+  .dark .import-status-conflict {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+  }
+
+  .import-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    background: rgba(226, 232, 240, 0.8);
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .dark .import-tag-chip {
+    background: rgba(51, 65, 85, 0.75);
+    color: #e2e8f0;
+  }
+
   /* NOVO: Estilo para o Toast de feedback */
   #toast-message {
     position: fixed;
@@ -1291,6 +1393,107 @@ html.dark .mobile-tab-button {
         <button type="submit" class="px-4 py-2 rounded bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-800">Salvar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal de importação de extratos -->
+<div id="modal-importar" class="fixed inset-0 z-[9700] hidden bg-slate-900/80 backdrop-blur flex items-center justify-center px-4 py-8" role="dialog" aria-modal="true" aria-labelledby="modal-importar-title">
+  <div class="relative mx-auto w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-3xl border border-slate-200/70 dark:border-slate-700/60 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 shadow-2xl">
+    <div class="flex items-start justify-between gap-3 border-b border-slate-200/70 dark:border-slate-800 px-6 py-4">
+      <div>
+        <h2 id="modal-importar-title" class="text-xl font-semibold">Importar extrato bancário</h2>
+        <p id="modal-importar-subtitle" class="text-sm text-slate-500 dark:text-slate-400">Selecione um arquivo CSV ou OFX e revise os lançamentos antes de confirmar.</p>
+      </div>
+      <button id="btn-close-importar" type="button" class="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200 text-2xl leading-none" aria-label="Fechar importação">&times;</button>
+    </div>
+    <div class="relative h-full">
+      <div id="import-loading-overlay" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-white/80 dark:bg-slate-950/90">
+        <i class="fa fa-spinner fa-spin text-2xl text-amber-500"></i>
+        <p id="import-loading-text" class="text-sm font-medium text-slate-600 dark:text-slate-200">Processando arquivo…</p>
+      </div>
+      <div id="import-scroll-area" class="overflow-y-auto px-6 py-5 space-y-5 max-h-[65vh]">
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="space-y-2">
+            <label for="import-file-input" class="text-sm font-semibold text-slate-700 dark:text-slate-200">Arquivo</label>
+            <input id="import-file-input" type="file" accept=".csv,.ofx" class="block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <p id="import-file-name" class="text-xs text-slate-500 dark:text-slate-400">Nenhum arquivo selecionado.</p>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-2">
+              <label for="import-account-select" class="text-sm font-semibold text-slate-700 dark:text-slate-200">Conta</label>
+              <select id="import-account-select" class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                <option value="nubank_cartao">Nubank (cartão)</option>
+                <option value="nubank_cc">Nubank (conta)</option>
+                <option value="itau_cc">Itaú (conta)</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">Detecção</span>
+              <div id="import-detected-hint" class="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 px-3 py-2 text-xs text-slate-500 dark:text-slate-400">Aguardando arquivo…</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2" role="tablist" aria-label="Filtrar pré-visualização">
+            <button type="button" class="import-filter-btn" data-import-filter="all" aria-selected="true">Todos</button>
+            <button type="button" class="import-filter-btn" data-import-filter="new">Novos</button>
+            <button type="button" class="import-filter-btn" data-import-filter="duplicates">Possíveis duplicados</button>
+            <button type="button" class="import-filter-btn" data-import-filter="edited">Editados</button>
+          </div>
+          <button id="btn-import-apply-category" type="button" class="inline-flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300 disabled:opacity-40 disabled:cursor-not-allowed">
+            <i class="fa fa-tag"></i>
+            Aplicar categoria a iguais
+          </button>
+        </div>
+
+        <div id="import-progress" class="text-sm text-slate-500 dark:text-slate-400"></div>
+
+        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/70 shadow-inner">
+          <div id="import-preview-empty" class="px-6 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
+            Nenhum lançamento carregado. Escolha um arquivo CSV ou OFX para visualizar as movimentações.
+          </div>
+          <div id="import-preview-wrapper" class="hidden max-h-[38vh] overflow-auto rounded-2xl">
+            <table class="min-w-full text-sm">
+              <thead class="sticky top-0 z-10 bg-white dark:bg-slate-950 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <tr>
+                  <th class="px-4 py-3 text-left w-10">✓</th>
+                  <th class="px-4 py-3 text-left w-28">Data</th>
+                  <th class="px-4 py-3 text-left">Descrição</th>
+                  <th class="px-4 py-3 text-right w-32">Valor</th>
+                  <th class="px-4 py-3 text-left w-44">Categoria</th>
+                  <th class="px-4 py-3 text-left w-40">Tags</th>
+                  <th class="px-4 py-3 text-left w-28">Status</th>
+                </tr>
+              </thead>
+              <tbody id="import-preview-tbody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+          <div class="flex items-center gap-2" id="import-pagination" aria-live="polite">
+            <button id="btn-import-prev" type="button" class="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1 font-semibold text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
+            <span id="import-page-indicator" class="font-semibold text-slate-600 dark:text-slate-300">Página 1/1</span>
+            <button id="btn-import-next" type="button" class="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1 font-semibold text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
+          </div>
+          <div class="flex-1 text-right">Mostrando até 500 linhas por vez.</div>
+        </div>
+
+        <div id="import-summary" class="hidden rounded-2xl border border-emerald-200/70 dark:border-emerald-700/50 bg-emerald-50/70 dark:bg-emerald-900/20 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-200">
+          <div class="font-semibold">Resumo da última importação</div>
+          <p id="import-summary-text" class="text-xs mt-1"></p>
+        </div>
+      </div>
+      <div class="flex flex-col gap-3 border-t border-slate-200/70 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/70 px-6 py-4 md:flex-row md:items-center md:justify-between">
+        <div id="import-last-session" class="text-xs text-slate-500 dark:text-slate-400"></div>
+        <div class="flex flex-wrap gap-3">
+          <button id="btn-import-undo" type="button" class="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed">Desfazer última importação</button>
+          <button id="btn-import-cancel" type="button" class="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-200">Cancelar</button>
+          <button id="btn-import-confirm" type="button" class="rounded-lg bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed">Importar 0 registros</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2155,6 +2358,14 @@ html.dark .mobile-tab-button {
         </span>
         Parcelado
       </button>
+      <button id="btn-open-importar"
+        class="group flex-1 flex flex-col items-center gap-1 text-[0.7rem] font-semibold text-amber-700 dark:text-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 dark:focus-visible:ring-amber-600"
+        type="button" aria-label="Importar extrato bancário">
+        <span class="flex h-11 w-11 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg transition-transform group-hover:-translate-y-0.5 dark:bg-amber-600">
+          <i class="fa fa-file-import text-lg"></i>
+        </span>
+        Importar
+      </button>
       <div class="relative flex-1 flex justify-center" data-quick-income-container>
         <button id="btn-quick-entradas" type="button"
           class="group flex flex-col items-center gap-1 text-[0.7rem] font-semibold text-emerald-700 dark:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:focus-visible:ring-emerald-700"
@@ -2365,11 +2576,11 @@ function stampWorkspaceCreation(data = {}) {
   const ownerUid = getWorkspaceOwnerUid() || currentUser?.uid || null;
   const workspaceId = getActiveWorkspaceId();
 
-  if (ownerUid && !('ownerUid' in base)) {
+  if (ownerUid && base.ownerUid !== ownerUid) {
     base.ownerUid = ownerUid;
   }
 
-  if (workspaceId && !('workspaceId' in base)) {
+  if (workspaceId && base.workspaceId !== workspaceId) {
     base.workspaceId = workspaceId;
   }
 
@@ -2398,11 +2609,11 @@ function stampWorkspaceUpdate(data = {}) {
   const ownerUid = getWorkspaceOwnerUid() || currentUser?.uid || null;
   const workspaceId = getActiveWorkspaceId();
 
-  if (ownerUid && !('ownerUid' in base)) {
+  if (ownerUid && base.ownerUid !== ownerUid) {
     base.ownerUid = ownerUid;
   }
 
-  if (workspaceId && !('workspaceId' in base)) {
+  if (workspaceId && base.workspaceId !== workspaceId) {
     base.workspaceId = workspaceId;
   }
 
@@ -2490,9 +2701,127 @@ async function ensureWorkspaceMetadataForCollections(force = false) {
         lastDoc = snapshot.docs[snapshot.docs.length - 1];
       }
     }
+
+    await normalizeImporterWorkspaceMetadata({ ownerUid, workspaceId, batchSize });
   } catch (err) {
     console.error('Erro ao normalizar metadados de workspace:', err);
     workspaceMetadataNormalizationExecuted = false;
+  }
+}
+
+async function normalizeImporterWorkspaceMetadata({ ownerUid, workspaceId, batchSize = 200 }) {
+  if (!ownerUid) {
+    return;
+  }
+
+  const collections = [
+    { name: 'transactions', ensureUser: true },
+    { name: 'importSessions', ensureUser: true },
+    { name: 'categoryRules', ensureUser: true },
+    { name: 'merchantAliases', ensureUser: true },
+  ];
+
+  const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+  for (const { name, ensureUser } of collections) {
+    const collectionRef = db.collection(name);
+    const seen = new Set();
+
+    const filters = [
+      workspaceId ? { field: 'workspaceId', value: workspaceId } : null,
+      { field: 'ownerUid', value: ownerUid },
+      ensureUser ? { field: 'userId', value: ownerUid } : null,
+    ].filter(Boolean);
+
+    for (const filter of filters) {
+      let lastDoc = null;
+      let more = true;
+
+      while (more) {
+        let query = collectionRef.orderBy(FieldPath.documentId()).limit(batchSize);
+        if (filter?.field && filter.value != null) {
+          try {
+            query = collectionRef.where(filter.field, '==', filter.value).orderBy(FieldPath.documentId()).limit(batchSize);
+          } catch (error) {
+            console.warn(`Ignorando filtro ${filter.field} em ${name}:`, error);
+            break;
+          }
+        }
+        if (lastDoc) {
+          query = query.startAfter(lastDoc);
+        }
+
+        let snapshot;
+        try {
+          snapshot = await query.get();
+        } catch (error) {
+          console.warn(`Falha ao normalizar ${name} (${filter?.field || 'sem filtro'}):`, error);
+          break;
+        }
+
+        if (snapshot.empty) {
+          break;
+        }
+
+        const batch = db.batch();
+        let updates = 0;
+
+        snapshot.docs.forEach((docSnap) => {
+          if (seen.has(docSnap.id)) {
+            return;
+          }
+          seen.add(docSnap.id);
+
+          const data = docSnap.data() || {};
+          const patch = {};
+
+          if (!data.ownerUid || data.ownerUid !== ownerUid) {
+            patch.ownerUid = ownerUid;
+          }
+
+          if (ensureUser && (!data.userId || data.userId !== ownerUid)) {
+            patch.userId = ownerUid;
+          }
+
+          if (!data.workspaceId || data.workspaceId !== workspaceId) {
+            patch.workspaceId = workspaceId || ownerUid;
+          }
+
+          if (!data.createdAt) {
+            patch.createdAt = serverTimestamp;
+          }
+
+          if (name === 'transactions') {
+            if (!data.meta) {
+              patch.meta = {};
+            }
+            if (!data.importSessionId) {
+              patch.importSessionId = null;
+            }
+          }
+
+          if (Object.keys(patch).length > 0) {
+            patch.updatedAt = serverTimestamp;
+            batch.set(docSnap.ref, patch, { merge: true });
+            updates += 1;
+          }
+        });
+
+        if (updates > 0) {
+          try {
+            await batch.commit();
+          } catch (error) {
+            console.error(`Erro ao aplicar metadados em ${name}:`, error);
+          }
+        }
+
+        if (snapshot.size < batchSize) {
+          break;
+        }
+
+        lastDoc = snapshot.docs[snapshot.docs.length - 1];
+      }
+    }
   }
 }
 
@@ -2937,22 +3266,32 @@ service cloud.firestore {
     function workspaceAllowed(workspaceId) {
       return isSignedIn() &&
         (workspaceId == request.auth.uid ||
-         (exists(/databases/$(database)/documents/sharedWorkspaces/$(workspaceId)) &&
+         (workspaceId != null &&
+          exists(/databases/$(database)/documents/sharedWorkspaces/$(workspaceId)) &&
           request.auth.uid in
             get(/databases/$(database)/documents/sharedWorkspaces/$(workspaceId)).data.memberUids));
     }
 
+    function ownerFromData(data) {
+      return data.ownerUid != null ? data.ownerUid : data.userId;
+    }
+
+    function workspaceFromData(data) {
+      return data == null
+        ? null
+        : (data.workspaceId != null && data.workspaceId != ''
+          ? data.workspaceId
+          : (data.ownerUid != null && data.ownerUid != ''
+            ? data.ownerUid
+            : data.userId));
+    }
+
     // 👤 Perfis de acesso (aprovação, bloqueio, etc.)
     match /profiles/{uid} {
-      // Usuário autenticado cria o próprio perfil
       allow create: if isSignedIn() && uid == request.auth.uid;
 
-      // Pode ler o próprio perfil; admins leem todos
       allow read: if isSignedIn() && (uid == request.auth.uid || isAdmin());
 
-      // Admins podem atualizar qualquer perfil.
-      // Usuário comum pode atualizar o próprio enquanto o status original ainda está "pending"
-      // (permite concluir o cadastro) ou manter campos básicos sem mudar status/cargo.
       allow update: if isSignedIn() && (
         isAdmin() ||
         (uid == request.auth.uid &&
@@ -2975,7 +3314,41 @@ service cloud.firestore {
       allow read, write: if workspaceAllowed(workspaceId);
     }
 
-    // 💼 Dados financeiros do workspace
+    // 💳 Transações importadas
+    match /transactions/{id} {
+      allow read: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
+      allow create: if isSignedIn() && workspaceAllowed(workspaceFromData(request.resource.data));
+      allow update: if isSignedIn() &&
+        workspaceAllowed(workspaceFromData(resource.data)) &&
+        request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(['category', 'tags', 'updatedAt', 'deletedAt', 'meta', 'importSessionId']);
+    }
+
+    // 🗂️ Sessões de importação
+    match /importSessions/{id} {
+      allow read: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
+      allow create: if isSignedIn() && workspaceAllowed(workspaceFromData(request.resource.data));
+      allow update: if isSignedIn() &&
+        workspaceAllowed(workspaceFromData(resource.data)) &&
+        request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(['undoneAt', 'stats']);
+    }
+
+    // 🏷️ Regras de categoria
+    match /categoryRules/{id} {
+      allow read: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
+      allow create: if isSignedIn() && workspaceAllowed(workspaceFromData(request.resource.data));
+      allow update: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
+    }
+
+    // 🛍️ Aliases de lojista
+    match /merchantAliases/{id} {
+      allow read: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
+      allow create: if isSignedIn() && workspaceAllowed(workspaceFromData(request.resource.data));
+      allow update: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
+    }
+
+    // 💼 Dados financeiros do workspace legado
     match /users/{ownerUid}/{collection}/{docId} {
       allow read, write: if workspaceAllowed(ownerUid);
     }
@@ -10810,3 +11183,1892 @@ updateFooterVerse();
 updateHeaderOffset();
 
 </script>
+
+<!-- [IMPORTER-BEGIN] -->
+<script>
+(function () {
+  'use strict';
+
+  const IMPORTER_ROWS_PER_PAGE = 500;
+  const CSV_LOADER_URL = 'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js';
+
+  const ACCOUNT_OPTIONS = {
+    nubank_cartao: { label: 'Nubank (cartão)', bank: 'nubank' },
+    nubank_cc: { label: 'Nubank (conta)', bank: 'nubank' },
+    itau_cc: { label: 'Itaú (conta)', bank: 'itau' },
+  };
+
+  const KEYWORD_RULES = [
+    { test: /ifood|ubereats|rappi|aifood|ai ?food/i, category: 'Alimentação', tags: ['delivery'] },
+    { test: /uber|99app|99 pop|cabify|motorizado|blablacar|girl cab/i, category: 'Transporte', tags: ['mobilidade'] },
+    { test: /iptu|ipva|prefeitura|sabesp|copasa|copel|enel|light|cemig|equatorial|aneel|saae|corsan|claro|vivo|tim|oi/i, category: 'Contas', tags: ['contas'] },
+    { test: /posto|shell|ipiranga|br mania|petrobras|divalto|fuel/i, category: 'Transporte', tags: ['combustível'] },
+    { test: /mercado|supermercado|atacadão|atacadao|carrefour|extra|assai|pão de açúcar|pao de acucar|big|dia%/i, category: 'Supermercado', tags: ['mercado'] },
+    { test: /farmacia|drogaria|drogasil|droga raia|ultrafarma|pague menos|panvel/i, category: 'Saúde', tags: ['farmácia'] },
+    { test: /academia|smartfit|bodytech|just fit|bluefit|crossfit/i, category: 'Saúde', tags: ['fitness'] },
+    { test: /netflix|spotify|prime video|disney|max |globoplay|paramount|crunchyroll|youtubepremium/i, category: 'Lazer', tags: ['assinatura'] },
+    { test: /amazon|mercado livre|magalu|shein|aliexpress|shopee|americanas|submarino|kabum/i, category: 'Compras Online', tags: ['ecommerce'] },
+    { test: /bb\.com|nubank|itaucard|bradesco|santander|c6 bank|sicredi|sicoob|inter/i, category: 'Serviços financeiros', tags: ['banco'] },
+  ];
+
+  const elements = {
+    modal: document.getElementById('modal-importar'),
+    openButton: document.getElementById('btn-open-importar'),
+    closeButton: document.getElementById('btn-close-importar'),
+    cancelButton: document.getElementById('btn-import-cancel'),
+    confirmButton: document.getElementById('btn-import-confirm'),
+    undoButton: document.getElementById('btn-import-undo'),
+    applyCategoryButton: document.getElementById('btn-import-apply-category'),
+    fileInput: document.getElementById('import-file-input'),
+    fileName: document.getElementById('import-file-name'),
+    accountSelect: document.getElementById('import-account-select'),
+    detectedHint: document.getElementById('import-detected-hint'),
+    progress: document.getElementById('import-progress'),
+    previewWrapper: document.getElementById('import-preview-wrapper'),
+    previewBody: document.getElementById('import-preview-tbody'),
+    previewEmpty: document.getElementById('import-preview-empty'),
+    paginationContainer: document.getElementById('import-pagination'),
+    prevButton: document.getElementById('btn-import-prev'),
+    nextButton: document.getElementById('btn-import-next'),
+    pageIndicator: document.getElementById('import-page-indicator'),
+    summaryContainer: document.getElementById('import-summary'),
+    summaryText: document.getElementById('import-summary-text'),
+    lastSessionHint: document.getElementById('import-last-session'),
+    loadingOverlay: document.getElementById('import-loading-overlay'),
+    loadingText: document.getElementById('import-loading-text'),
+    filterButtons: Array.from(document.querySelectorAll('.import-filter-btn')),
+  };
+
+  const state = {
+    rows: [],
+    filter: 'all',
+    page: 0,
+    isOpen: false,
+    ownerUid: null,
+    workspaceId: null,
+    accountId: document.getElementById('import-account-select')?.value || 'nubank_cartao',
+    sourceBank: ACCOUNT_OPTIONS[document.getElementById('import-account-select')?.value || 'nubank_cartao']?.bank || null,
+    detectedAccountId: null,
+    categoryRules: [],
+    merchantAliases: new Map(),
+    aliasUpdates: new Map(),
+    lastCategoryContext: null,
+    fileHash: null,
+    fileName: '',
+    metadataPromise: null,
+    metadataLoaded: false,
+    lastImportSession: null,
+    totalSelected: 0,
+    existingCheckToken: 0,
+    categoryOptions: [],
+  };
+
+  let papaLoaderPromise = null;
+
+  initializeImporter();
+
+  function initializeImporter() {
+    if (!elements.modal || !elements.openButton) {
+      return;
+    }
+
+    prepareFilterButtons();
+    attachEventListeners();
+    updateFilterButtons();
+    updateDetectedHint();
+    updateImportButton();
+    updateSummary(null);
+    updateUndoButton();
+    updateProgress();
+    updateApplyCategoryButton();
+  }
+
+  function prepareFilterButtons() {
+    elements.filterButtons.forEach((button) => {
+      if (!button.dataset.filterLabel) {
+        button.dataset.filterLabel = button.textContent.trim();
+      }
+    });
+  }
+
+  function attachEventListeners() {
+    elements.openButton.addEventListener('click', () => {
+      openModal().catch((error) => console.error('Erro ao abrir importador:', error));
+    });
+
+    if (elements.closeButton) {
+      elements.closeButton.addEventListener('click', closeModal);
+    }
+
+    if (elements.cancelButton) {
+      elements.cancelButton.addEventListener('click', closeModal);
+    }
+
+    if (elements.undoButton) {
+      elements.undoButton.addEventListener('click', () => {
+        handleUndo().catch((error) => console.error('Erro ao desfazer importação:', error));
+      });
+    }
+
+    if (elements.confirmButton) {
+      elements.confirmButton.addEventListener('click', () => {
+        handleImport().catch((error) => console.error('Erro ao importar lançamentos:', error));
+      });
+    }
+
+    if (elements.fileInput) {
+      elements.fileInput.addEventListener('change', () => {
+        handleFileSelection().catch((error) => console.error('Erro ao processar arquivo:', error));
+      });
+    }
+
+    if (elements.accountSelect) {
+      elements.accountSelect.addEventListener('change', (event) => {
+        handleAccountChange(event.target.value).catch((error) => console.error('Erro ao trocar conta do importador:', error));
+      });
+    }
+
+    if (elements.applyCategoryButton) {
+      elements.applyCategoryButton.addEventListener('click', applyCategoryToMatches);
+    }
+
+    if (elements.prevButton) {
+      elements.prevButton.addEventListener('click', () => changePage(state.page - 1));
+    }
+
+    if (elements.nextButton) {
+      elements.nextButton.addEventListener('click', () => changePage(state.page + 1));
+    }
+
+    if (elements.previewBody) {
+      elements.previewBody.addEventListener('change', handlePreviewChange);
+      elements.previewBody.addEventListener('click', handlePreviewClick);
+    }
+
+    if (elements.filterButtons.length) {
+      elements.filterButtons.forEach((button) => {
+        button.addEventListener('click', () => setFilter(button.dataset.importFilter));
+      });
+    }
+
+    elements.modal.addEventListener('click', (event) => {
+      if (event.target === elements.modal) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener('keydown', handleKeydown, true);
+  }
+
+  async function openModal() {
+    if (state.isOpen) return;
+    if (typeof currentUser === 'undefined' || !currentUser) {
+      if (typeof showToast === 'function') {
+        showToast('Faça login para importar extratos.', 'info');
+      }
+      return;
+    }
+
+    const workspaceContext = resolveWorkspaceContext();
+    if (!workspaceContext.ownerUid) {
+      if (typeof showToast === 'function') {
+        showToast('Espaço financeiro não disponível no momento.', 'error');
+      }
+      return;
+    }
+
+    state.ownerUid = workspaceContext.ownerUid;
+    state.workspaceId = workspaceContext.workspaceId;
+    state.accountId = elements.accountSelect ? elements.accountSelect.value : state.accountId;
+    state.sourceBank = ACCOUNT_OPTIONS[state.accountId]?.bank || state.sourceBank || null;
+    state.detectedAccountId = null;
+
+    resetImporterState();
+    state.isOpen = true;
+    elements.modal.classList.remove('hidden');
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
+    if (typeof updateFloatingMenuVisibility === 'function') updateFloatingMenuVisibility();
+
+    state.metadataPromise = loadMetadata();
+    await Promise.allSettled([state.metadataPromise, loadLastImportSession()]);
+    updateSummary(state.lastImportSession);
+    updateUndoButton();
+  }
+
+  function closeModal() {
+    if (!state.isOpen) return;
+    state.isOpen = false;
+    resetImporterState();
+    elements.modal.classList.add('hidden');
+    if (typeof unlockBodyScrollIfAllowed === 'function') unlockBodyScrollIfAllowed();
+    if (typeof updateFloatingMenuVisibility === 'function') updateFloatingMenuVisibility();
+  }
+
+  function handleKeydown(event) {
+    if (!state.isOpen) return;
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      closeModal();
+    }
+  }
+
+  async function ensureMetadataLoaded() {
+    if (state.metadataLoaded) {
+      return;
+    }
+    if (!state.metadataPromise) {
+      state.metadataPromise = loadMetadata();
+    }
+    try {
+      await state.metadataPromise;
+    } catch (error) {
+      console.error('Erro ao carregar metadados do importador:', error);
+    }
+  }
+
+  async function loadMetadata() {
+    if (typeof db === 'undefined' || !db || !state.ownerUid) {
+      state.categoryRules = [];
+      state.merchantAliases = new Map();
+      state.metadataLoaded = true;
+      updateCategoryOptions();
+      return;
+    }
+
+    state.metadataLoaded = false;
+
+    const rulesPromise = db.collection('categoryRules')
+      .where('userId', '==', state.ownerUid)
+      .get()
+      .then((snapshot) => {
+        const rules = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() || {}) }));
+        state.categoryRules = normalizeCategoryRules(rules);
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar regras de categoria:', error);
+        state.categoryRules = [];
+      });
+
+    const aliasesPromise = db.collection('merchantAliases')
+      .where('userId', '==', state.ownerUid)
+      .get()
+      .then((snapshot) => {
+        const map = new Map();
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data() || {};
+          if (!data.normalized) return;
+          map.set(String(data.normalized), {
+            category: data.category || null,
+            tags: Array.isArray(data.tags) ? data.tags.filter(Boolean) : [],
+          });
+        });
+        state.merchantAliases = map;
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar aliases de lojista:', error);
+        state.merchantAliases = new Map();
+      });
+
+    await Promise.allSettled([rulesPromise, aliasesPromise]);
+    state.metadataLoaded = true;
+    updateCategoryOptions();
+  }
+
+  function normalizeCategoryRules(rules) {
+    const priority = { equals: 0, regex: 1, contains: 2 };
+    return rules
+      .filter((rule) => rule && rule.pattern)
+      .sort((a, b) => {
+        const pa = priority[a.type] ?? 3;
+        const pb = priority[b.type] ?? 3;
+        if (pa !== pb) return pa - pb;
+        const lenA = String(a.pattern || '').length;
+        const lenB = String(b.pattern || '').length;
+        return lenB - lenA;
+      });
+  }
+
+  async function loadLastImportSession() {
+    if (typeof db === 'undefined' || !db || !state.ownerUid) {
+      state.lastImportSession = null;
+      return;
+    }
+
+    try {
+      let snapshot = null;
+      try {
+        snapshot = await db
+          .collection('importSessions')
+          .where('userId', '==', state.ownerUid)
+          .orderBy('startedAtMs', 'desc')
+          .limit(20)
+          .get();
+      } catch (error) {
+        if (error?.code === 'failed-precondition') {
+          snapshot = await db
+            .collection('importSessions')
+            .where('userId', '==', state.ownerUid)
+            .limit(50)
+            .get();
+        } else {
+          throw error;
+        }
+      }
+
+      if (!snapshot || snapshot.empty) {
+        state.lastImportSession = null;
+        return;
+      }
+
+      let doc = snapshot.docs[0];
+      if (state.workspaceId) {
+        doc = snapshot.docs.find((candidate) => {
+          const data = candidate.data() || {};
+          return data.workspaceId === state.workspaceId || data.ownerUid === state.ownerUid;
+        }) || doc;
+      }
+
+      const data = doc.data() || {};
+      state.lastImportSession = {
+        id: doc.id,
+        stats: data.stats || null,
+        startedAt: typeof parseFirestoreDate === 'function' ? parseFirestoreDate(data.startedAt) : (data.startedAt?.toDate?.() || null),
+        finishedAt: typeof parseFirestoreDate === 'function' ? parseFirestoreDate(data.finishedAt) : (data.finishedAt?.toDate?.() || null),
+        undoneAt: typeof parseFirestoreDate === 'function' ? parseFirestoreDate(data.undoneAt) : (data.undoneAt?.toDate?.() || null),
+        accountId: data.accountId || null,
+        bank: data.bank || null,
+        fileName: data.fileName || null,
+      };
+    } catch (error) {
+      console.error('Erro ao buscar última sessão de importação:', error);
+      state.lastImportSession = null;
+    }
+  }
+
+  function updateSummary(session) {
+    if (!elements.summaryContainer || !elements.summaryText) return;
+    if (!session) {
+      elements.summaryContainer.classList.add('hidden');
+      elements.summaryText.textContent = '';
+    } else if (session.undoneAt) {
+      elements.summaryContainer.classList.remove('hidden');
+      elements.summaryText.textContent = `Importação desfeita em ${formatDateTimeSafe(session.undoneAt)}.`;
+    } else if (session.stats) {
+      elements.summaryContainer.classList.remove('hidden');
+      elements.summaryText.textContent = formatSummaryStats(session.stats);
+    } else {
+      elements.summaryContainer.classList.add('hidden');
+      elements.summaryText.textContent = '';
+    }
+
+    if (elements.lastSessionHint) {
+      if (!session) {
+        elements.lastSessionHint.textContent = 'Nenhuma importação realizada ainda neste workspace.';
+      } else if (session.undoneAt) {
+        elements.lastSessionHint.textContent = `Última importação foi desfeita em ${formatDateTimeSafe(session.undoneAt)}.`;
+      } else {
+        const finished = session.finishedAt ? formatDateTimeSafe(session.finishedAt) : 'em andamento';
+        elements.lastSessionHint.textContent = `Última importação concluída em ${finished}.`;
+      }
+    }
+  }
+
+  function formatSummaryStats(stats) {
+    const read = stats?.read ?? 0;
+    const inserted = stats?.inserted ?? 0;
+    const updated = stats?.updated ?? 0;
+    const skipped = stats?.skipped ?? 0;
+    const restored = stats?.restored ?? 0;
+    return `Lidas: ${read} • Inseridas: ${inserted} • Atualizadas: ${updated} • Restauradas: ${restored} • Puladas: ${skipped}`;
+  }
+
+  function formatDateTimeSafe(value) {
+    if (!value) return '--';
+    if (typeof formatDateTime === 'function') {
+      return formatDateTime(value);
+    }
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '--';
+    return date.toLocaleString('pt-BR', { hour12: false });
+  }
+
+  function updateUndoButton() {
+    if (!elements.undoButton) return;
+    const enabled = Boolean(state.lastImportSession && !state.lastImportSession.undoneAt);
+    elements.undoButton.disabled = !enabled;
+    elements.undoButton.title = enabled
+      ? 'Reverte a última importação realizada neste workspace.'
+      : 'Não há importação pendente para desfazer.';
+  }
+
+  function resetImporterState() {
+    state.rows = [];
+    state.filter = 'all';
+    state.page = 0;
+    state.totalSelected = 0;
+    state.lastCategoryContext = null;
+    state.aliasUpdates.clear();
+    state.fileHash = null;
+    state.fileName = '';
+    state.detectedAccountId = null;
+    state.existingCheckToken += 1;
+
+    if (elements.fileName) {
+      elements.fileName.textContent = 'Nenhum arquivo selecionado.';
+    }
+    if (elements.progress) {
+      elements.progress.textContent = '';
+    }
+    if (elements.applyCategoryButton) {
+      elements.applyCategoryButton.disabled = true;
+    }
+    if (elements.fileInput) {
+      elements.fileInput.value = '';
+      elements.fileInput.disabled = false;
+    }
+    if (elements.accountSelect) {
+      elements.accountSelect.disabled = false;
+    }
+    renderRows();
+    updateFilterButtons();
+    updateImportButton();
+    updateApplyCategoryButton();
+    updateDetectedHint();
+  }
+
+  function resetRows(message) {
+    state.rows = [];
+    state.page = 0;
+    state.filter = 'all';
+    state.totalSelected = 0;
+    renderRows();
+    updateFilterButtons();
+    updateImportButton();
+    updateApplyCategoryButton();
+    if (elements.previewWrapper) elements.previewWrapper.classList.add('hidden');
+    if (elements.previewEmpty) {
+      elements.previewEmpty.classList.remove('hidden');
+      elements.previewEmpty.textContent = message || 'Nenhum lançamento carregado. Escolha um arquivo CSV ou OFX para começar.';
+    }
+  }
+
+  function updateFileNameDisplay(file) {
+    if (!elements.fileName || !file) return;
+    const parts = [];
+    parts.push(file.name || 'Arquivo sem nome');
+    if (typeof file.size === 'number') {
+      parts.push(formatFileSize(file.size));
+    }
+    if (state.fileHash) {
+      parts.push(`SHA-256: ${state.fileHash.slice(0, 16)}…`);
+    }
+    elements.fileName.textContent = parts.join(' • ');
+  }
+
+  async function handleFileSelection() {
+    if (!elements.fileInput || !elements.fileInput.files || !elements.fileInput.files.length) {
+      return;
+    }
+
+    const file = elements.fileInput.files[0];
+    setLoading(true, 'Lendo arquivo...');
+
+    try {
+      await ensureMetadataLoaded();
+
+      const [arrayBuffer, text] = await Promise.all([
+        file.arrayBuffer(),
+        file.text(),
+      ]);
+
+      state.fileHash = await computeSha256(arrayBuffer);
+      state.fileName = file.name || '';
+      updateFileNameDisplay(file);
+
+      const extension = (file.name || '').split('.').pop()?.toLowerCase() || '';
+      let entries = [];
+      let detectedFormat = null;
+
+      if (extension === 'ofx') {
+        const ofx = parseOfx(text);
+        entries = ofx.entries;
+        detectedFormat = ofx.format;
+      } else {
+        const papa = await ensurePapaParse();
+        const csvResult = await parseCsv(text, papa);
+        detectedFormat = detectCsvFormat(csvResult.meta?.fields || []);
+        entries = mapCsvRows(csvResult.data, detectedFormat);
+      }
+
+      applyDetectedAccount(detectedFormat);
+
+      if (!entries.length) {
+        resetRows('Nenhum lançamento válido encontrado neste arquivo.');
+        if (typeof showToast === 'function') {
+          showToast('Não encontramos lançamentos válidos no arquivo enviado.', 'info');
+        }
+        return;
+      }
+
+      await ingestEntries(entries);
+    } catch (error) {
+      console.error('Erro ao processar arquivo de importação:', error);
+      resetRows('Não foi possível processar o arquivo. Verifique o formato e tente novamente.');
+      if (typeof showToast === 'function') {
+        showToast('Não foi possível processar o arquivo. Verifique o formato e tente novamente.', 'error');
+      }
+    } finally {
+      setLoading(false);
+      if (elements.fileInput) {
+        elements.fileInput.value = '';
+      }
+    }
+  }
+
+  function ensurePapaParse() {
+    if (window.Papa) {
+      return Promise.resolve(window.Papa);
+    }
+    if (!papaLoaderPromise) {
+      papaLoaderPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = CSV_LOADER_URL;
+        script.async = true;
+        script.onload = () => resolve(window.Papa);
+        script.onerror = () => reject(new Error('Não foi possível carregar o parser CSV.'));
+        document.head.appendChild(script);
+      });
+    }
+    return papaLoaderPromise;
+  }
+
+  function parseCsv(text, papa) {
+    return new Promise((resolve, reject) => {
+      papa.parse(text, {
+        header: true,
+        skipEmptyLines: 'greedy',
+        dynamicTyping: false,
+        transformHeader: (header) => header,
+        complete: (results) => resolve(results),
+        error: (error) => reject(error),
+      });
+    });
+  }
+
+  function detectCsvFormat(fields) {
+    if (!Array.isArray(fields) || !fields.length) return null;
+    const normalized = fields.map(normalizeHeader);
+    if (normalized.some((field) => field.includes('historico')) && normalized.some((field) => field.includes('valor'))) {
+      return { type: 'itau_cc', accountId: 'itau_cc', bank: 'itau' };
+    }
+    if (normalized.includes('categoria') && normalized.includes('descricao')) {
+      return { type: 'nubank_cartao', accountId: 'nubank_cartao', bank: 'nubank' };
+    }
+    if (normalized.includes('descricao') && normalized.includes('valor')) {
+      return { type: 'nubank_cc', accountId: 'nubank_cc', bank: 'nubank' };
+    }
+    return null;
+  }
+
+  function mapCsvRows(rows, format) {
+    if (!Array.isArray(rows)) return [];
+    const formatType = format?.type || state.accountId || 'nubank_cartao';
+    const mapped = [];
+    rows.forEach((row) => {
+      if (!row) return;
+      const mappedRow = mapRowForFormat(row, formatType);
+      if (!mappedRow) return;
+      mappedRow.accountId = format?.accountId || state.accountId || elements.accountSelect?.value || 'nubank_cartao';
+      mappedRow.bank = format?.bank || ACCOUNT_OPTIONS[mappedRow.accountId]?.bank || state.sourceBank || null;
+      mapped.push(mappedRow);
+    });
+    return mapped;
+  }
+
+  function mapRowForFormat(row, formatType) {
+    const rawDate = getCsvField(row, 'data', 'date', 'data da compra', 'data do lançamento', 'data da transação');
+    const rawDescription = getCsvField(row, 'descricao', 'descrição', 'historico', 'histórico', 'description', 'detalhe');
+    const rawAmount = getCsvField(row, 'valor', 'valor (r$)', 'valor final', 'valor da transação', 'valor da compra');
+    const rawType = getCsvField(row, 'tipo', 'categoria', 'entrada/saida', 'entrada/saída', 'lancamento', 'lançamento');
+    if (!rawDate || rawAmount === undefined || rawAmount === null || !rawDescription) {
+      return null;
+    }
+    const isoDate = toISODate(rawDate);
+    if (!isoDate) return null;
+    const amount = normalizeAmount(rawAmount, rawType, formatType);
+    if (!Number.isFinite(amount) || amount === 0) return null;
+    return {
+      date: isoDate,
+      description: String(rawDescription).trim(),
+      amount,
+      meta: {},
+    };
+  }
+
+  function normalizeAmount(value, typeHint, formatType) {
+    let raw = String(value).trim();
+    if (!raw) return NaN;
+    let normalized = raw.replace(/[^0-9,.-]/g, '');
+    const hasExplicitSign = /^[+-]/.test(normalized);
+    normalized = normalized.replace(/\.(?=.*\.)/g, '');
+    normalized = normalized.replace(/\./g, '').replace(',', '.');
+    let amount = Number(normalized);
+    if (!Number.isFinite(amount)) return NaN;
+    if (hasExplicitSign) {
+      amount = normalized.startsWith('-') ? -Math.abs(amount) : Math.abs(amount);
+    }
+    if (typeHint) {
+      const hint = String(typeHint).toLowerCase();
+      if (/credito|crédito|entrada|dep[oó]sito|receb|estorno|ajuste/.test(hint)) {
+        amount = Math.abs(amount);
+      } else if (/debito|d[eé]bito|sa[ií]da|pagamento|compra|transfer|pix enviado/.test(hint)) {
+        amount = -Math.abs(amount);
+      }
+    } else if (!hasExplicitSign && (formatType === 'nubank_cartao' || formatType === 'nubank_cc' || formatType === 'itau_cc')) {
+      amount = -Math.abs(amount);
+    }
+    return Number(amount.toFixed(2));
+  }
+
+  function getCsvField(row, ...candidates) {
+    if (!row) return null;
+    const keys = Object.keys(row);
+    for (const candidate of candidates) {
+      const normalizedCandidate = normalizeHeader(candidate);
+      for (const key of keys) {
+        if (normalizeHeader(key) === normalizedCandidate) {
+          return row[key];
+        }
+      }
+    }
+    return null;
+  }
+
+  function parseOfx(text) {
+    const entries = [];
+    const cleaned = text.replace(/\r\n/g, '\n');
+    const regex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi;
+    let match;
+    while ((match = regex.exec(cleaned))) {
+      const block = match[1];
+      const dateMatch = /<DTPOSTED>([^<]+)/i.exec(block);
+      const amountMatch = /<TRNAMT>([^<]+)/i.exec(block);
+      const nameMatch = /<NAME>([^<]+)/i.exec(block);
+      const memoMatch = /<MEMO>([^<]+)/i.exec(block);
+      const isoDate = toISODate(dateMatch ? dateMatch[1] : null);
+      const amount = amountMatch ? Number(amountMatch[1].replace(',', '.')) : NaN;
+      if (!isoDate || !Number.isFinite(amount) || amount === 0) continue;
+      const descriptionParts = [];
+      if (nameMatch && nameMatch[1]) descriptionParts.push(nameMatch[1].trim());
+      if (memoMatch && memoMatch[1]) descriptionParts.push(memoMatch[1].trim());
+      const description = descriptionParts.join(' — ').trim() || 'Movimentação OFX';
+      entries.push({
+        date: isoDate,
+        description,
+        amount: Number(amount.toFixed(2)),
+        meta: {},
+        accountId: state.accountId,
+        bank: state.sourceBank || null,
+      });
+    }
+    return { entries, format: { type: 'ofx', bank: state.sourceBank || null } };
+  }
+
+  function applyDetectedAccount(format) {
+    if (!format) {
+      state.detectedAccountId = null;
+      updateDetectedHint();
+      return;
+    }
+    state.detectedAccountId = format.accountId || null;
+    if (format.accountId && ACCOUNT_OPTIONS[format.accountId]) {
+      state.accountId = format.accountId;
+      if (elements.accountSelect) {
+        elements.accountSelect.value = format.accountId;
+      }
+    }
+    state.sourceBank = format.bank || ACCOUNT_OPTIONS[state.accountId]?.bank || state.sourceBank || null;
+    updateDetectedHint();
+  }
+
+  async function ingestEntries(entries) {
+    if (!Array.isArray(entries) || !entries.length) {
+      resetRows('Nenhum lançamento válido encontrado neste arquivo.');
+      return;
+    }
+
+    const token = ++state.existingCheckToken;
+    setLoading(true, 'Analisando lançamentos...');
+
+    const prepared = entries
+      .map((entry, index) => createRowFromEntry(entry, index))
+      .filter(Boolean);
+
+    if (!prepared.length) {
+      resetRows('Todos os lançamentos foram ignorados após a limpeza inicial.');
+      setLoading(false);
+      return;
+    }
+
+    detectTransferGroups(prepared);
+
+    state.rows = prepared;
+    state.filter = 'all';
+    state.page = 0;
+    state.totalSelected = prepared.filter((row) => row.selected).length;
+
+    updateProgress();
+    updateFilterButtons();
+    renderRows();
+    updateImportButton();
+    updateApplyCategoryButton();
+
+    if (!db) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await ensureMetadataLoaded();
+      const existingMap = await fetchExistingTransactions(prepared, token);
+      if (token !== state.existingCheckToken) {
+        return;
+      }
+
+      prepared.forEach((row) => {
+        const existing = existingMap.get(row.dedupKey) || null;
+        applyExistingTransaction(row, existing);
+      });
+
+      state.totalSelected = prepared.filter((row) => row.selected).length;
+      renderRows();
+      updateProgress();
+      updateImportButton();
+      updateApplyCategoryButton();
+    } finally {
+      if (token === state.existingCheckToken) {
+        setLoading(false);
+      }
+    }
+  }
+
+  function createRowFromEntry(entry, index) {
+    if (!entry || !entry.date || !entry.description || !Number.isFinite(entry.amount)) {
+      return null;
+    }
+
+    const normalizedDescription = normalizeDescription(entry.description);
+    const sanitizedDescription = entry.description.trim();
+    const meta = { ...(entry.meta || {}) };
+    const installment = detectInstallmentInfo(sanitizedDescription);
+    if (installment) {
+      meta.installment = installment;
+    }
+
+    const suggestion = suggestCategoryAndTags(normalizedDescription, sanitizedDescription);
+    const tags = Array.isArray(entry.tags) ? entry.tags.filter(Boolean) : [];
+    const mergedTags = mergeTagSets(tags, suggestion.tags || []);
+
+    const row = {
+      id: `row-${index}`,
+      accountId: entry.accountId || state.accountId,
+      bank: entry.bank || ACCOUNT_OPTIONS[entry.accountId || state.accountId]?.bank || state.sourceBank || null,
+      date: toISODate(entry.date),
+      amount: Number(entry.amount.toFixed(2)),
+      description: sanitizedDescription,
+      normalizedDescription,
+      category: entry.category || suggestion.category || null,
+      categorySource: suggestion.source || null,
+      tags: mergedTags,
+      tagsSource: suggestion.tags?.length ? suggestion.source : null,
+      original: {
+        description: sanitizedDescription,
+        category: entry.category || suggestion.category || null,
+        tags: [...mergedTags],
+      },
+      meta,
+      selected: true,
+      status: 'new',
+      statusHint: 'Novo lançamento',
+      isEdited: false,
+      duplicateOf: null,
+      dedupKey: null,
+      conflictReason: null,
+      raw: entry.raw || null,
+    };
+
+    row.dedupKey = buildDedupKey({
+      accountId: row.accountId,
+      date: row.date,
+      amount: row.amount,
+      description: row.description,
+    });
+
+    return row;
+  }
+
+  function detectTransferGroups(rows) {
+    const groups = new Map();
+    rows.forEach((row) => {
+      const key = `${row.date}|${Math.abs(row.amount).toFixed(2)}`;
+      const bucket = groups.get(key) || [];
+      bucket.push(row);
+      groups.set(key, bucket);
+    });
+
+    let groupIndex = 0;
+    groups.forEach((bucket) => {
+      if (bucket.length < 2) return;
+      const positives = bucket.filter((row) => row.amount > 0);
+      const negatives = bucket.filter((row) => row.amount < 0);
+      if (!positives.length || !negatives.length) return;
+      const id = `trf_${rowDateSlug(bucket[0].date)}_${groupIndex++}`;
+      positives.forEach((row) => {
+        row.meta = row.meta || {};
+        row.meta.transferGroupId = id;
+      });
+      negatives.forEach((row) => {
+        row.meta = row.meta || {};
+        row.meta.transferGroupId = id;
+      });
+    });
+  }
+
+  function rowDateSlug(date) {
+    return (date || '').replace(/-/g, '');
+  }
+
+  function detectInstallmentInfo(description) {
+    if (!description) return null;
+    const match = /(?:\b|\s)(\d{1,2})\/(\d{1,2})(?:\b|\s)/.exec(description);
+    if (!match) return null;
+    const current = Number(match[1]);
+    const total = Number(match[2]);
+    if (!Number.isFinite(current) || !Number.isFinite(total) || current < 1 || total < 1) {
+      return null;
+    }
+    return { n: current, total };
+  }
+
+  function suggestCategoryAndTags(normalizedDescription, originalDescription) {
+    if (!normalizedDescription) {
+      return { category: null, tags: [], source: null };
+    }
+
+    const alias = state.merchantAliases.get(normalizedDescription);
+    if (alias && (alias.category || (alias.tags && alias.tags.length))) {
+      return {
+        category: alias.category || null,
+        tags: alias.tags ? [...alias.tags] : [],
+        source: 'alias',
+      };
+    }
+
+    for (const rule of state.categoryRules) {
+      try {
+        if (rule.type === 'equals') {
+          if (normalizedDescription === normalizeDescription(rule.pattern)) {
+            return {
+              category: rule.category || null,
+              tags: Array.isArray(rule.tags) ? [...rule.tags] : [],
+              source: 'rule',
+            };
+          }
+        } else if (rule.type === 'contains') {
+          if (normalizedDescription.includes(normalizeDescription(rule.pattern))) {
+            return {
+              category: rule.category || null,
+              tags: Array.isArray(rule.tags) ? [...rule.tags] : [],
+              source: 'rule',
+            };
+          }
+        } else if (rule.type === 'regex') {
+          const regex = new RegExp(rule.pattern, 'i');
+          if (regex.test(originalDescription)) {
+            return {
+              category: rule.category || null,
+              tags: Array.isArray(rule.tags) ? [...rule.tags] : [],
+              source: 'rule',
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('Regra de categoria inválida:', rule, error);
+      }
+    }
+
+    for (const keyword of KEYWORD_RULES) {
+      if (keyword.test.test(originalDescription)) {
+        return {
+          category: keyword.category,
+          tags: [...(keyword.tags || [])],
+          source: 'keyword',
+        };
+      }
+    }
+
+    return { category: null, tags: [], source: null };
+  }
+
+  function mergeTagSets(baseTags, suggestionTags) {
+    const set = new Set();
+    [...baseTags, ...suggestionTags].forEach((tag) => {
+      const normalized = normalizeTag(tag);
+      if (normalized) {
+        set.add(normalized);
+      }
+    });
+    return Array.from(set);
+  }
+
+  function normalizeTag(tag) {
+    return (tag || '').trim().toLowerCase().replace(/\s+/g, '-');
+  }
+
+  async function fetchExistingTransactions(rows, token) {
+    const map = new Map();
+    if (!db || !Array.isArray(rows) || !rows.length) return map;
+
+    const uniqueKeys = Array.from(new Set(rows.map((row) => row.dedupKey).filter(Boolean)));
+    const chunkSize = 20;
+    for (let i = 0; i < uniqueKeys.length; i += chunkSize) {
+      if (token !== state.existingCheckToken) {
+        break;
+      }
+      const slice = uniqueKeys.slice(i, i + chunkSize);
+      const promises = slice.map((key) =>
+        db.collection('transactions')
+          .doc(key)
+          .get()
+          .then((doc) => (doc.exists ? { key, data: doc.data() || {} } : null))
+          .catch((error) => {
+            console.error('Erro ao verificar transação existente:', error);
+            return null;
+          })
+      );
+      const results = await Promise.all(promises);
+      if (token !== state.existingCheckToken) {
+        break;
+      }
+      results.forEach((result) => {
+        if (!result) return;
+        const data = result.data;
+        if (data.ownerUid && data.ownerUid !== state.ownerUid) {
+          return;
+        }
+        if (state.workspaceId && data.workspaceId && data.workspaceId !== state.workspaceId) {
+          return;
+        }
+        map.set(result.key, data);
+      });
+    }
+    return map;
+  }
+
+  function applyExistingTransaction(row, existing) {
+    if (!existing) {
+      row.status = 'new';
+      row.statusHint = 'Novo lançamento';
+      row.selected = true;
+      return;
+    }
+
+    row.duplicateOf = existing;
+    const isSoftDeleted = Boolean(existing.deletedAt);
+
+    if (isSoftDeleted) {
+      row.status = 'restore';
+      row.statusHint = 'Será restaurado (foi desfeito anteriormente)';
+      row.selected = true;
+      return;
+    }
+
+    const sameCategory = normalizeNullable(existing.category) === normalizeNullable(row.category);
+    const existingTags = Array.isArray(existing.tags) ? existing.tags.map(normalizeTag).sort() : [];
+    const newTags = row.tags.map(normalizeTag).sort();
+    const sameTags = existingTags.length === newTags.length && existingTags.every((tag, index) => tag === newTags[index]);
+
+    if (sameCategory && sameTags) {
+      row.status = 'duplicate';
+      row.statusHint = 'Já existe no histórico';
+      row.selected = false;
+    } else {
+      row.status = 'update';
+      row.statusHint = 'Atualizará categoria/tags existentes';
+      row.selected = true;
+    }
+  }
+
+  function normalizeNullable(value) {
+    if (value === null || value === undefined) return null;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed ? trimmed : null;
+    }
+    return value;
+  }
+
+  function renderRows() {
+    if (!elements.previewBody || !elements.previewWrapper || !elements.previewEmpty) return;
+
+    const filtered = getFilteredRows();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / IMPORTER_ROWS_PER_PAGE));
+    if (state.page >= totalPages) {
+      state.page = totalPages - 1;
+    }
+
+    const start = state.page * IMPORTER_ROWS_PER_PAGE;
+    const slice = filtered.slice(start, start + IMPORTER_ROWS_PER_PAGE);
+
+    elements.previewBody.innerHTML = '';
+
+    if (!slice.length) {
+      elements.previewWrapper.classList.add('hidden');
+      elements.previewEmpty.classList.remove('hidden');
+      if (state.rows.length) {
+        if (state.filter === 'duplicates') {
+          elements.previewEmpty.textContent = 'Nenhum possível duplicado neste conjunto.';
+        } else if (state.filter === 'edited') {
+          elements.previewEmpty.textContent = 'Nenhum lançamento foi editado até agora.';
+        } else if (state.filter === 'new') {
+          elements.previewEmpty.textContent = 'Nenhum lançamento novo nesta seleção.';
+        } else {
+          elements.previewEmpty.textContent = 'Nenhum lançamento disponível para exibir.';
+        }
+      } else {
+        elements.previewEmpty.textContent = 'Nenhum lançamento carregado. Escolha um arquivo CSV ou OFX para visualizar as movimentações.';
+      }
+    } else {
+      elements.previewWrapper.classList.remove('hidden');
+      elements.previewEmpty.classList.add('hidden');
+
+      slice.forEach((row) => {
+        const tr = document.createElement('tr');
+        tr.dataset.rowId = row.id;
+        tr.className = [
+          row.selected ? 'bg-white/70 dark:bg-slate-900/60' : 'bg-white/40 dark:bg-slate-950/40',
+          row.status === 'duplicate' ? 'opacity-70' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+
+        tr.innerHTML = `
+          <td class="px-4 py-3 align-top">
+            <input type="checkbox" class="import-select" data-role="select" ${row.selected ? 'checked' : ''} />
+          </td>
+          <td class="px-4 py-3 align-top whitespace-nowrap text-xs text-slate-600 dark:text-slate-300">${formatDisplayDate(row.date)}</td>
+          <td class="px-4 py-3 align-top">
+            <div class="flex flex-col gap-1">
+              <input type="text" class="import-desc-input w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-950/40 px-2 py-1 text-sm" data-field="description" value="${escapeHtml(row.description)}" />
+              ${renderSuggestionBadge(row)}
+            </div>
+          </td>
+          <td class="px-4 py-3 align-top text-right text-sm font-semibold ${row.amount < 0 ? 'text-rose-500' : 'text-emerald-500'}">${formatCurrency(row.amount)}</td>
+          <td class="px-4 py-3 align-top">
+            ${renderCategorySelect(row)}
+          </td>
+          <td class="px-4 py-3 align-top">
+            ${renderTagsEditor(row)}
+          </td>
+          <td class="px-4 py-3 align-top text-xs">
+            ${renderStatusBadge(row)}
+          </td>
+        `;
+
+        elements.previewBody.appendChild(tr);
+      });
+    }
+
+    renderPagination(filtered.length);
+  }
+
+  function renderSuggestionBadge(row) {
+    if (!row.categorySource) return '<span class="text-[10px] text-slate-400">Sem sugestão</span>';
+    const label = row.category ? `${row.category}` : 'Categoria sugerida';
+    const sourceLabel =
+      row.categorySource === 'alias'
+        ? 'Aprendido'
+        : row.categorySource === 'rule'
+        ? 'Regra'
+        : row.categorySource === 'keyword'
+        ? 'Heurística'
+        : 'Sugestão';
+    return `<span class="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-300">${escapeHtml(label)}<span class="font-semibold">${escapeHtml(sourceLabel)}</span></span>`;
+  }
+
+  function renderCategorySelect(row) {
+    const options = state.categoryOptions.length ? state.categoryOptions : getFallbackCategories();
+    const value = row.category || '';
+    const optsHtml = ['<option value="">Sem categoria</option>']
+      .concat(
+        options.map(
+          (option) => `<option value="${escapeHtml(option)}" ${option === value ? 'selected' : ''}>${escapeHtml(option)}</option>`
+        )
+      )
+      .join('');
+    return `<select data-field="category" class="import-category-select w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-950/40 px-2 py-1 text-sm">${optsHtml}</select>`;
+  }
+
+  function renderTagsEditor(row) {
+    const chips = row.tags
+      .map(
+        (tag) => `
+        <span class="import-tag-chip inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-[11px]" data-action="remove-tag" data-tag="${escapeHtml(tag)}">
+          <i class="fa fa-tag text-[9px]"></i>${escapeHtml(tag)}
+          <button type="button" class="import-tag-remove text-[10px]" aria-label="Remover tag">&times;</button>
+        </span>`
+      )
+      .join('');
+    return `
+      <div class="import-tags flex flex-wrap gap-2" data-role="tags" data-row-id="${row.id}">
+        ${chips || '<span class="text-[10px] text-slate-400">Sem tags</span>'}
+        <button type="button" class="import-tag-add inline-flex items-center justify-center rounded-full border border-dashed border-amber-300 dark:border-amber-500/40 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-300" data-action="add-tag">
+          + Tag
+        </button>
+      </div>`;
+  }
+
+  function renderStatusBadge(row) {
+    const baseClass = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold';
+    if (row.status === 'new') {
+      return `<span class="${baseClass} bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">Novo</span>`;
+    }
+    if (row.status === 'restore') {
+      return `<span class="${baseClass} bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200">Restaurar</span>`;
+    }
+    if (row.status === 'update') {
+      return `<span class="${baseClass} bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">Atualizar</span>`;
+    }
+    if (row.status === 'duplicate') {
+      return `<span class="${baseClass} bg-slate-100 text-slate-600 dark:bg-slate-800/40 dark:text-slate-200">Duplicado</span>`;
+    }
+    if (row.status === 'conflict') {
+      return `<span class="${baseClass} bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200">Conflito</span>`;
+    }
+    return `<span class="${baseClass} bg-slate-100 text-slate-500">-</span>`;
+  }
+
+  function getFallbackCategories() {
+    return [
+      'Alimentação',
+      'Transporte',
+      'Supermercado',
+      'Saúde',
+      'Moradia',
+      'Lazer',
+      'Educação',
+      'Compras Online',
+      'Serviços',
+    ];
+  }
+
+  function renderPagination(totalRows) {
+    if (!elements.paginationContainer) return;
+    const totalPages = Math.max(1, Math.ceil(totalRows / IMPORTER_ROWS_PER_PAGE));
+    if (elements.prevButton) {
+      elements.prevButton.disabled = state.page <= 0;
+    }
+    if (elements.nextButton) {
+      elements.nextButton.disabled = state.page >= totalPages - 1;
+    }
+    if (elements.pageIndicator) {
+      elements.pageIndicator.textContent = `Página ${totalRows ? state.page + 1 : 0}/${totalPages}`;
+    }
+  }
+
+  function changePage(page) {
+    const filtered = getFilteredRows();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / IMPORTER_ROWS_PER_PAGE));
+    if (page < 0 || page >= totalPages) return;
+    state.page = page;
+    renderRows();
+  }
+
+  function getFilteredRows() {
+    if (state.filter === 'new') {
+      return state.rows.filter((row) => row.status === 'new' || row.status === 'restore');
+    }
+    if (state.filter === 'duplicates') {
+      return state.rows.filter((row) => row.status === 'duplicate' || row.status === 'conflict');
+    }
+    if (state.filter === 'edited') {
+      return state.rows.filter((row) => row.isEdited);
+    }
+    return state.rows;
+  }
+
+  function setFilter(filter) {
+    if (state.filter === filter) return;
+    state.filter = filter;
+    state.page = 0;
+    updateFilterButtons();
+    renderRows();
+  }
+
+  function updateFilterButtons() {
+    if (!elements.filterButtons || !elements.filterButtons.length) return;
+    elements.filterButtons.forEach((button) => {
+      const active = button.dataset.importFilter === state.filter;
+      button.classList.toggle('import-filter-active', active);
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
+      if (!active) {
+        button.textContent = button.dataset.filterLabel || button.textContent;
+      } else {
+        button.textContent = `${button.dataset.filterLabel || button.textContent}`;
+      }
+    });
+  }
+
+  function handlePreviewChange(event) {
+    const target = event.target;
+    const rowElement = target.closest('tr[data-row-id]');
+    if (!rowElement) return;
+    const row = state.rows.find((item) => item.id === rowElement.dataset.rowId);
+    if (!row) return;
+
+    if (target.matches('[data-role="select"]')) {
+      row.selected = target.checked;
+      updateSelectionState();
+      return;
+    }
+
+    if (target.dataset.field === 'description') {
+      const newValue = target.value || '';
+      if (newValue === row.description) return;
+      row.description = newValue;
+      row.normalizedDescription = normalizeDescription(newValue);
+      row.dedupKey = buildDedupKey({
+        accountId: row.accountId,
+        date: row.date,
+        amount: row.amount,
+        description: row.description,
+      });
+      markRowEdited(row);
+      scheduleDedupRefresh([row]);
+      state.lastCategoryContext = {
+        normalizedDescription: row.normalizedDescription,
+        category: row.category,
+        tags: [...row.tags],
+      };
+      updateApplyCategoryButton();
+      return;
+    }
+
+    if (target.dataset.field === 'category') {
+      const newCategory = target.value || null;
+      if (newCategory === row.category) return;
+      row.category = newCategory;
+      markRowEdited(row);
+      state.aliasUpdates.set(row.normalizedDescription, {
+        category: row.category,
+        tags: [...row.tags],
+      });
+      state.lastCategoryContext = {
+        normalizedDescription: row.normalizedDescription,
+        category: row.category,
+        tags: [...row.tags],
+      };
+      updateApplyCategoryButton();
+      applyExistingTransaction(row, row.duplicateOf || null);
+      updateSelectionState();
+      renderRows();
+      return;
+    }
+  }
+
+  function handlePreviewClick(event) {
+    const target = event.target;
+    const rowElement = target.closest('tr[data-row-id]');
+    if (!rowElement) return;
+    const row = state.rows.find((item) => item.id === rowElement.dataset.rowId);
+    if (!row) return;
+
+    if (target.closest('[data-action="add-tag"]')) {
+      event.preventDefault();
+      const input = window.prompt('Digite a nova tag (sem espaços).');
+      if (!input) return;
+      const normalized = normalizeTag(input);
+      if (!normalized) return;
+      if (!row.tags.includes(normalized)) {
+        row.tags.push(normalized);
+        markRowEdited(row);
+        state.aliasUpdates.set(row.normalizedDescription, {
+          category: row.category,
+          tags: [...row.tags],
+        });
+        state.lastCategoryContext = {
+          normalizedDescription: row.normalizedDescription,
+          category: row.category,
+          tags: [...row.tags],
+        };
+        updateApplyCategoryButton();
+        renderRows();
+        updateSelectionState();
+      }
+      return;
+    }
+
+    if (target.closest('[data-action="remove-tag"]')) {
+      event.preventDefault();
+      const tag = target.closest('[data-action="remove-tag"]').dataset.tag;
+      const index = row.tags.indexOf(tag);
+      if (index >= 0) {
+        row.tags.splice(index, 1);
+        markRowEdited(row);
+        state.aliasUpdates.set(row.normalizedDescription, {
+          category: row.category,
+          tags: [...row.tags],
+        });
+        state.lastCategoryContext = {
+          normalizedDescription: row.normalizedDescription,
+          category: row.category,
+          tags: [...row.tags],
+        };
+        updateApplyCategoryButton();
+        renderRows();
+        updateSelectionState();
+      }
+      return;
+    }
+  }
+
+  function markRowEdited(row) {
+    const original = row.original || {};
+    const changedDescription = row.description !== original.description;
+    const changedCategory = (row.category || null) !== (original.category || null);
+    const originalTags = (original.tags || []).map(normalizeTag).sort();
+    const currentTags = (row.tags || []).map(normalizeTag).sort();
+    const changedTags =
+      originalTags.length !== currentTags.length ||
+      originalTags.some((tag, index) => tag !== currentTags[index]);
+
+    row.isEdited = changedDescription || changedCategory || changedTags;
+  }
+
+  function scheduleDedupRefresh(rows) {
+    if (!db || !rows.length) {
+      updateSelectionState();
+      renderRows();
+      return;
+    }
+    const token = ++state.existingCheckToken;
+    fetchExistingTransactions(rows, token).then((map) => {
+      if (token !== state.existingCheckToken) return;
+      rows.forEach((row) => {
+        const existing = map.get(row.dedupKey) || null;
+        applyExistingTransaction(row, existing);
+      });
+      updateSelectionState();
+      renderRows();
+    });
+  }
+
+  function updateSelectionState() {
+    state.totalSelected = state.rows.filter((row) => row.selected).length;
+    updateImportButton();
+    updateProgress();
+  }
+
+  function updateApplyCategoryButton() {
+    if (!elements.applyCategoryButton) return;
+    elements.applyCategoryButton.disabled = !(
+      state.lastCategoryContext &&
+      state.lastCategoryContext.category &&
+      state.lastCategoryContext.normalizedDescription
+    );
+  }
+
+  function applyCategoryToMatches() {
+    if (!state.lastCategoryContext) return;
+    const { normalizedDescription, category, tags } = state.lastCategoryContext;
+    if (!normalizedDescription || !category) return;
+
+    let affected = 0;
+    state.rows.forEach((row) => {
+      if (row.normalizedDescription !== normalizedDescription) return;
+      if (row.category === category && arraysEqual(row.tags, tags)) return;
+      row.category = category;
+      row.tags = [...(tags || [])];
+      markRowEdited(row);
+      state.aliasUpdates.set(row.normalizedDescription, {
+        category: row.category,
+        tags: [...row.tags],
+      });
+      applyExistingTransaction(row, row.duplicateOf || null);
+      affected += 1;
+    });
+
+    if (affected && typeof showToast === 'function') {
+      showToast(`Categoria aplicada em ${affected} lançamento${affected > 1 ? 's' : ''}.`, 'success');
+    }
+
+    renderRows();
+    updateSelectionState();
+  }
+
+  function arraysEqual(a, b) {
+    if (!Array.isArray(a) || !Array.isArray(b)) return false;
+    if (a.length !== b.length) return false;
+    const sortedA = [...a].sort();
+    const sortedB = [...b].sort();
+    return sortedA.every((value, index) => value === sortedB[index]);
+  }
+
+  async function handleAccountChange(accountId) {
+    if (!accountId || !ACCOUNT_OPTIONS[accountId]) return;
+    state.accountId = accountId;
+    state.sourceBank = ACCOUNT_OPTIONS[accountId]?.bank || null;
+    updateDetectedHint();
+
+    if (!state.rows.length) return;
+    state.rows.forEach((row) => {
+      row.accountId = accountId;
+      row.bank = state.sourceBank;
+      row.dedupKey = buildDedupKey({
+        accountId: row.accountId,
+        date: row.date,
+        amount: row.amount,
+        description: row.description,
+      });
+    });
+    scheduleDedupRefresh(state.rows);
+  }
+
+  function updateDetectedHint() {
+    if (!elements.detectedHint) return;
+    if (!state.detectedAccountId) {
+      elements.detectedHint.textContent = `Conta selecionada: ${ACCOUNT_OPTIONS[state.accountId]?.label || 'Personalizada'}.`;
+      return;
+    }
+    const detectedLabel = ACCOUNT_OPTIONS[state.detectedAccountId]?.label || 'Formato detectado';
+    if (state.detectedAccountId === state.accountId) {
+      elements.detectedHint.textContent = `Detectado automaticamente: ${detectedLabel}.`;
+    } else {
+      elements.detectedHint.textContent = `Detectado: ${detectedLabel}. Ajustamos para ${ACCOUNT_OPTIONS[state.accountId]?.label || state.accountId}.`;
+    }
+  }
+
+  function updateImportButton() {
+    if (!elements.confirmButton) return;
+    elements.confirmButton.disabled = !state.totalSelected;
+    elements.confirmButton.textContent = `Importar ${state.totalSelected} registro${state.totalSelected === 1 ? '' : 's'}`;
+  }
+
+  function updateProgress() {
+    if (!elements.progress) return;
+    const total = state.rows.length;
+    if (!total) {
+      elements.progress.textContent = '';
+      return;
+    }
+    const counts = state.rows.reduce(
+      (acc, row) => {
+        acc[row.status] = (acc[row.status] || 0) + 1;
+        if (row.isEdited) acc.edited += 1;
+        if (row.selected) acc.selected += 1;
+        return acc;
+      },
+      { edited: 0, selected: 0 }
+    );
+    const parts = [
+      `${total} carregado${total === 1 ? '' : 's'}`,
+      `${counts.new || 0} novos`,
+      `${counts.restore || 0} restaurar`,
+      `${counts.update || 0} atualizar`,
+      `${counts.duplicate || 0} duplicados`,
+    ];
+    if (counts.edited) {
+      parts.push(`${counts.edited} editado${counts.edited === 1 ? '' : 's'}`);
+    }
+    elements.progress.textContent = `${parts.join(' • ')} — ${counts.selected} selecionado${counts.selected === 1 ? '' : 's'} para importar.`;
+  }
+
+  async function handleImport() {
+    if (!state.totalSelected) {
+      if (typeof showToast === 'function') {
+        showToast('Selecione ao menos um lançamento para importar.', 'info');
+      }
+      return;
+    }
+    if (!db) {
+      if (typeof showToast === 'function') {
+        showToast('Firestore indisponível. Verifique a conexão.', 'error');
+      }
+      return;
+    }
+
+    await ensureMetadataLoaded();
+
+    const selectedRows = state.rows.filter((row) => row.selected);
+    const importSessionId = generateImportSessionId();
+
+    setLoading(true, 'Importando lançamentos...');
+
+    try {
+      const stats = await persistTransactions(selectedRows, importSessionId);
+      await persistAliasUpdates();
+      await saveImportSession(importSessionId, stats);
+      await loadLastImportSession();
+      updateSummary(state.lastImportSession);
+      updateUndoButton();
+      if (typeof showToast === 'function') {
+        showToast(
+          `Importação concluída. Inseridos ${stats.inserted}, restaurados ${stats.restored}, atualizados ${stats.updated}, pulados ${stats.skipped}.`,
+          'success'
+        );
+      }
+      resetRows('Importação concluída. Carregue outro arquivo para continuar.');
+    } catch (error) {
+      console.error('Erro ao importar lançamentos:', error);
+      if (typeof showToast === 'function') {
+        showToast('Erro ao importar lançamentos. Tente novamente.', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function persistTransactions(rows, importSessionId) {
+    const stats = {
+      read: state.rows.length,
+      inserted: 0,
+      skipped: 0,
+      updated: 0,
+      restored: 0,
+    };
+
+    const batches = [];
+    let currentBatch = db.batch();
+    let batchCount = 0;
+
+    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+    const resolvedWorkspaceId = state.workspaceId || (typeof getActiveWorkspaceId === 'function' ? getActiveWorkspaceId() : null) || state.ownerUid || null;
+
+    for (const row of rows) {
+      if (!row.dedupKey) {
+        stats.skipped += 1;
+        continue;
+      }
+
+      const docRef = db.collection('transactions').doc(row.dedupKey);
+      const baseData = {
+        _id: row.dedupKey,
+        userId: currentUser?.uid || state.ownerUid,
+        ownerUid: state.ownerUid,
+        workspaceId: resolvedWorkspaceId,
+        accountId: row.accountId,
+        date: row.date,
+        amount: row.amount,
+        description: row.description,
+        category: row.category || null,
+        tags: row.tags || [],
+        sourceBank: row.bank || ACCOUNT_OPTIONS[row.accountId]?.bank || null,
+        importSessionId,
+        raw: row.raw || null,
+        meta: row.meta || {},
+      };
+
+      if (row.status === 'new') {
+        const creationData = stampWorkspaceCreation(baseData);
+        creationData.createdAt = timestamp;
+        creationData.updatedAt = timestamp;
+        currentBatch.set(docRef, creationData);
+        stats.inserted += 1;
+      } else if (row.status === 'restore') {
+        const restoreData = stampWorkspaceUpdate({
+          category: row.category || null,
+          tags: row.tags || [],
+          deletedAt: firebase.firestore.FieldValue.delete(),
+          meta: row.meta || {},
+          importSessionId,
+        });
+        restoreData.updatedAt = timestamp;
+        currentBatch.set(docRef, restoreData, { merge: true });
+        stats.restored += 1;
+      } else if (row.status === 'update') {
+        const updateData = stampWorkspaceUpdate({
+          category: row.category || null,
+          tags: row.tags || [],
+          deletedAt: firebase.firestore.FieldValue.delete(),
+        });
+        updateData.updatedAt = timestamp;
+        currentBatch.set(docRef, updateData, { merge: true });
+        stats.updated += 1;
+      } else {
+        stats.skipped += 1;
+        continue;
+      }
+
+      batchCount += 1;
+      if (batchCount === 400) {
+        batches.push(currentBatch.commit());
+        currentBatch = db.batch();
+        batchCount = 0;
+      }
+    }
+
+    if (batchCount > 0) {
+      batches.push(currentBatch.commit());
+    }
+
+    await Promise.all(batches);
+
+    stats.skipped = Math.max(0, stats.read - (stats.inserted + stats.updated + stats.restored));
+
+    if (typeof atualizarResumoRapido === 'function') atualizarResumoRapido();
+    if (typeof atualizarGraficos === 'function') atualizarGraficos();
+    if (typeof gerarInsights === 'function') gerarInsights();
+
+    return stats;
+  }
+
+  async function persistAliasUpdates() {
+    if (!state.aliasUpdates.size || !db) return;
+    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+    const updates = Array.from(state.aliasUpdates.entries());
+    state.aliasUpdates.clear();
+    const resolvedWorkspaceId = state.workspaceId || (typeof getActiveWorkspaceId === 'function' ? getActiveWorkspaceId() : null) || state.ownerUid || null;
+
+    const batches = [];
+    let currentBatch = db.batch();
+    let count = 0;
+
+    updates.forEach(([normalizedDescription, payload]) => {
+      if (!normalizedDescription) return;
+      const safeId = normalizedDescription.replace(/[\/#?\s.\[\]]+/g, '_');
+      const ref = db.collection('merchantAliases').doc(`${state.ownerUid}_${safeId}`);
+      currentBatch.set(ref, stampWorkspaceUpdate({
+        userId: state.ownerUid,
+        workspaceId: resolvedWorkspaceId,
+        normalized: normalizedDescription,
+        category: payload.category || null,
+        tags: Array.isArray(payload.tags) ? payload.tags : [],
+        lastUsedAt: timestamp,
+      }), { merge: true });
+      count += 1;
+      if (count === 400) {
+        batches.push(currentBatch.commit());
+        currentBatch = db.batch();
+        count = 0;
+      }
+      state.merchantAliases.set(normalizedDescription, {
+        category: payload.category || null,
+        tags: Array.isArray(payload.tags) ? payload.tags : [],
+      });
+    });
+
+    if (count > 0) {
+      batches.push(currentBatch.commit());
+    }
+
+    await Promise.all(batches);
+  }
+
+  async function saveImportSession(importSessionId, stats) {
+    if (!db) return;
+    const now = new Date();
+    const sessionRef = db.collection('importSessions').doc(importSessionId);
+    const resolvedWorkspaceId = state.workspaceId || (typeof getActiveWorkspaceId === 'function' ? getActiveWorkspaceId() : null) || state.ownerUid || null;
+    const data = stampWorkspaceCreation({
+      userId: state.ownerUid,
+      workspaceId: resolvedWorkspaceId,
+      bank: state.sourceBank || null,
+      accountId: state.accountId,
+      startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      finishedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      startedAtMs: now.getTime(),
+      finishedAtMs: now.getTime(),
+      fileHash: state.fileHash || null,
+      fileName: state.fileName || null,
+      stats,
+    });
+    await sessionRef.set(data);
+  }
+
+  async function handleUndo() {
+    if (!state.lastImportSession || !state.lastImportSession.id) {
+      if (typeof showToast === 'function') {
+        showToast('Não há importação para desfazer.', 'info');
+      }
+      return;
+    }
+
+    if (!db) {
+      if (typeof showToast === 'function') {
+        showToast('Firestore indisponível. Tente novamente mais tarde.', 'error');
+      }
+      return;
+    }
+
+    const sessionId = state.lastImportSession.id;
+    setLoading(true, 'Revertendo importação...');
+    try {
+      const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+      const query = db
+        .collection('transactions')
+        .where('ownerUid', '==', state.ownerUid)
+        .where('importSessionId', '==', sessionId)
+        .limit(5000);
+
+      const snapshot = await query.get();
+      const batches = [];
+      let batch = db.batch();
+      let counter = 0;
+      snapshot.docs.forEach((doc) => {
+        batch.set(doc.ref, { deletedAt: timestamp }, { merge: true });
+        counter += 1;
+        if (counter === 400) {
+          batches.push(batch.commit());
+          batch = db.batch();
+          counter = 0;
+        }
+      });
+      if (counter > 0) batches.push(batch.commit());
+
+      await Promise.all(batches);
+      await db.collection('importSessions').doc(sessionId).set({
+        undoneAt: timestamp,
+        stats: {
+          ...(state.lastImportSession.stats || {}),
+          undone: true,
+        },
+      }, { merge: true });
+
+      await loadLastImportSession();
+      updateSummary(state.lastImportSession);
+      updateUndoButton();
+
+      if (typeof showToast === 'function') {
+        showToast('Importação desfeita com sucesso.', 'success');
+      }
+    } catch (error) {
+      console.error('Erro ao desfazer importação:', error);
+      if (typeof showToast === 'function') {
+        showToast('Não foi possível desfazer a importação.', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function setLoading(isLoading, message) {
+    if (!elements.loadingOverlay || !elements.loadingText) return;
+    elements.loadingOverlay.classList.toggle('hidden', !isLoading);
+    if (message) {
+      elements.loadingText.textContent = message;
+    }
+  }
+
+  function formatCurrency(value) {
+    return Number(value || 0).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+    });
+  }
+
+  function formatDisplayDate(isoDate) {
+    if (!isoDate) return '--';
+    const [year, month, day] = isoDate.split('-').map(Number);
+    if (!year || !month || !day) return isoDate;
+    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+  }
+
+  function toISODate(value) {
+    if (!value) return null;
+    if (value instanceof Date) {
+      return value.toISOString().slice(0, 10);
+    }
+    const raw = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      return raw.slice(0, 10);
+    }
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+      const [day, month, year] = raw.split('/');
+      return `${year}-${month}-${day}`;
+    }
+    if (/^\d{8}$/.test(raw)) {
+      const year = raw.slice(0, 4);
+      const month = raw.slice(4, 6);
+      const day = raw.slice(6, 8);
+      return `${year}-${month}-${day}`;
+    }
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString().slice(0, 10);
+    }
+    return null;
+  }
+
+  async function computeSha256(arrayBuffer) {
+    if (!window.crypto || !window.crypto.subtle) return null;
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function formatFileSize(bytes) {
+    if (!Number.isFinite(bytes)) return '';
+    if (bytes < 1024) return `${bytes} bytes`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function updateCategoryOptions() {
+    const options = new Set();
+    document
+      .querySelectorAll('#modal-categoria option, #fixo-categoria option, select[data-field="category"] option')
+      .forEach((option) => {
+        const value = option.value || option.textContent;
+        const normalized = value ? value.trim() : '';
+        if (normalized) options.add(normalized);
+      });
+    state.categoryOptions = Array.from(options).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    if (state.rows.length) {
+      renderRows();
+      updateApplyCategoryButton();
+    }
+  }
+
+  function buildDedupKey({ accountId, date, amount, description }) {
+    const iso = toISODate(date);
+    if (!iso) return null;
+    const normalizedDescription = normalizeDescription(description).replace(/\b(parc|parcela|\d{1,2}\/\d{1,2})\b/gi, '').trim();
+    const formattedAmount = Number(amount || 0).toFixed(2);
+    return `${accountId || 'desconhecido'}|${iso}|${formattedAmount}|${normalizedDescription}`;
+  }
+
+  function normalizeDescription(value) {
+    return (value || '')
+      .normalize('NFKD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s\-_.]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function generateImportSessionId() {
+    return `imp_${new Date().toISOString()}`;
+  }
+
+  function resolveWorkspaceContext() {
+    return {
+      ownerUid: typeof getWorkspaceOwnerUid === 'function' ? getWorkspaceOwnerUid() : currentUser?.uid || null,
+      workspaceId: typeof getActiveWorkspaceId === 'function' ? getActiveWorkspaceId() : null,
+    };
+  }
+})();
+
+</script>
+<!-- [IMPORTER-END] -->
