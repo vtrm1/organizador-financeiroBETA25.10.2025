@@ -3273,7 +3273,11 @@ service cloud.firestore {
     }
 
     function ownerFromData(data) {
-      return data.ownerUid != null ? data.ownerUid : data.userId;
+      return data == null
+        ? null
+        : (data.ownerUid != null && data.ownerUid != ''
+          ? data.ownerUid
+          : data.userId);
     }
 
     function workspaceFromData(data) {
@@ -3281,9 +3285,11 @@ service cloud.firestore {
         ? null
         : (data.workspaceId != null && data.workspaceId != ''
           ? data.workspaceId
-          : (data.ownerUid != null && data.ownerUid != ''
-            ? data.ownerUid
-            : data.userId));
+          : ownerFromData(data));
+    }
+
+    function canAccessData(data) {
+      return workspaceAllowed(workspaceFromData(data)) || workspaceAllowed(ownerFromData(data));
     }
 
     // 👤 Perfis de acesso (aprovação, bloqueio, etc.)
@@ -3316,36 +3322,36 @@ service cloud.firestore {
 
     // 💳 Transações importadas
     match /transactions/{id} {
-      allow read: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
-      allow create: if isSignedIn() && workspaceAllowed(workspaceFromData(request.resource.data));
+      allow read: if isSignedIn() && canAccessData(resource.data);
+      allow create: if isSignedIn() && canAccessData(request.resource.data);
       allow update: if isSignedIn() &&
-        workspaceAllowed(workspaceFromData(resource.data)) &&
+        canAccessData(resource.data) &&
         request.resource.data.diff(resource.data).changedKeys()
           .hasOnly(['category', 'tags', 'updatedAt', 'deletedAt', 'meta', 'importSessionId']);
     }
 
     // 🗂️ Sessões de importação
     match /importSessions/{id} {
-      allow read: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
-      allow create: if isSignedIn() && workspaceAllowed(workspaceFromData(request.resource.data));
+      allow read: if isSignedIn() && canAccessData(resource.data);
+      allow create: if isSignedIn() && canAccessData(request.resource.data);
       allow update: if isSignedIn() &&
-        workspaceAllowed(workspaceFromData(resource.data)) &&
+        canAccessData(resource.data) &&
         request.resource.data.diff(resource.data).changedKeys()
           .hasOnly(['undoneAt', 'stats']);
     }
 
     // 🏷️ Regras de categoria
     match /categoryRules/{id} {
-      allow read: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
-      allow create: if isSignedIn() && workspaceAllowed(workspaceFromData(request.resource.data));
-      allow update: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
+      allow read: if isSignedIn() && canAccessData(resource.data);
+      allow create: if isSignedIn() && canAccessData(request.resource.data);
+      allow update: if isSignedIn() && canAccessData(resource.data);
     }
 
     // 🛍️ Aliases de lojista
     match /merchantAliases/{id} {
-      allow read: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
-      allow create: if isSignedIn() && workspaceAllowed(workspaceFromData(request.resource.data));
-      allow update: if isSignedIn() && workspaceAllowed(workspaceFromData(resource.data));
+      allow read: if isSignedIn() && canAccessData(resource.data);
+      allow create: if isSignedIn() && canAccessData(request.resource.data);
+      allow update: if isSignedIn() && canAccessData(resource.data);
     }
 
     // 💼 Dados financeiros do workspace legado
